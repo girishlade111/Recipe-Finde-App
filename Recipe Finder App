@@ -107,34 +107,36 @@
                 </div>
 
                 <div>
-                    <label for="cuisine-filter" class="block text-sm font-medium text-gray-600 mb-1">Cuisine:</label>
-                    <select id="cuisine-filter" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">All Cuisines</option>
-                        <option value="American">American</option>
-                        <option value="British">British</option>
-                        <option value="Canadian">Canadian</option>
-                        <option value="Chinese">Chinese</option>
-                        <option value="Dutch">Dutch</option>
-                        <option value="Egyptian">Egyptian</option>
-                        <option value="French">French</option>
-                        <option value="Greek">Greek</option>
-                        <option value="Indian">Indian</option>
-                        <option value="Irish">Irish</option>
-                        <option value="Italian">Italian</option>
-                        <option value="Jamaican">Jamaican</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Kenyan">Kenyan</option>
-                        <option value="Malaysian">Malaysian</option>
-                        <option value="Mexican">Mexican</option>
-                        <option value="Moroccan">Moroccan</option>
-                        <option value="Polish">Polish</option>
-                        <option value="Portuguese">Portuguese</option>
-                        <option value="Russian">Russian</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="Thai">Thai</option>
-                        <option value="Tunisian">Tunisian</option>
-                        <option value="Turkish">Turkish</option>
-                        <option value="Vietnamese">Vietnamese</option>
+                    <label for="category-cuisine-filter" class="block text-sm font-medium text-gray-600 mb-1">Category / Cuisine:</label>
+                    <select id="category-cuisine-filter" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">All Categories/Cuisines</option>
+                        <option value="Breakfast" data-type="category">Breakfast</option> 
+                        <option value="American" data-type="cuisine">American</option>
+                        <option value="British" data-type="cuisine">British</option>
+                        <option value="Canadian" data-type="cuisine">Canadian</option>
+                        <option value="Chinese" data-type="cuisine">Chinese</option>
+                        <option value="Dutch" data-type="cuisine">Dutch</option>
+                        <option value="Egyptian" data-type="cuisine">Egyptian</option>
+                        <option value="French" data-type="cuisine">French</option>
+                        <option value="Greek" data-type="cuisine">Greek</option>
+                        <option value="Indian" data-type="cuisine">Indian</option>
+                        <option value="Irish" data-type="cuisine">Irish</option>
+                        <option value="Italian" data-type="cuisine">Italian</option>
+                        <option value="Jamaican" data-type="cuisine">Jamaican</option>
+                        <option value="Japanese" data-type="cuisine">Japanese</option>
+                        <option value="Kenyan" data-type="cuisine">Kenyan</option>
+                        <option value="Malaysian" data-type="cuisine">Malaysian</option>
+                        <option value="Mexican" data-type="cuisine">Mexican</option>
+                        <option value="Moroccan" data-type="cuisine">Moroccan</option>
+                        <option value="Polish" data-type="cuisine">Polish</option>
+                        <option value="Portuguese" data-type="cuisine">Portuguese</option>
+                        <option value="Russian" data-type="cuisine">Russian</option>
+                        <option value="Spanish" data-type="cuisine">Spanish</option>
+                        <option value="Thai" data-type="cuisine">Thai</option>
+                        <option value="Tunisian" data-type="cuisine">Tunisian</option>
+                        <option value="Turkish" data-type="cuisine">Turkish</option>
+                        <option value="Vietnamese" data-type="cuisine">Vietnamese</option>
+                        {/* Add other categories from TheMealDB if needed e.g. Dessert, Seafood, etc. */}
                     </select>
                 </div>
 
@@ -193,7 +195,7 @@
 
         // --- DOM Elements ---
         const searchNameInput = document.getElementById('search-name');
-        const cuisineFilter = document.getElementById('cuisine-filter');
+        const categoryCuisineFilter = document.getElementById('category-cuisine-filter'); // Updated ID
         const ingredientFilter = document.getElementById('ingredient-filter');
         const veganFilterBtn = document.getElementById('vegan-filter');
         const glutenFreeFilterBtn = document.getElementById('gluten-free-filter');
@@ -253,21 +255,28 @@
                 return;
             }
             
+            let filteredRecipes = recipes; // Start with all recipes passed
+
             // Apply dietary filters if active
+            // Note: This is a client-side filter after an initial fetch.
+            // For APIs that support dietary filtering directly, it's better to use that.
             if (currentDietFilter) {
-                recipes = recipes.filter(recipe => checkDietaryMatch(recipe, currentDietFilter));
-                 if (recipes.length === 0) {
+                // This is a placeholder for actual dietary filtering logic.
+                // For a real app, `checkDietaryMatch` would need to be more robust,
+                // possibly fetching full details for each recipe if not already available.
+                filteredRecipes = recipes.filter(recipe => checkDietaryMatch(recipe, currentDietFilter));
+                 if (filteredRecipes.length === 0) {
                     noResultsMsg.textContent = `No ${currentDietFilter} recipes found with the current criteria.`;
                     noResultsMsg.style.display = 'block';
                     return;
                 }
             }
 
-            recipes.forEach(recipe => {
+            filteredRecipes.forEach(recipe => {
                 const isFavorite = favorites.some(fav => fav.idMeal === recipe.idMeal);
                 const card = `
                     <div class="recipe-card bg-white rounded-lg shadow-md overflow-hidden cursor-pointer p-4 flex flex-col justify-between" data-id="${recipe.idMeal}">
-                        <img src="${recipe.strMealThumb}" alt="${recipe.strMeal}" class="w-full h-48 object-cover rounded-md">
+                        <img src="${recipe.strMealThumb}" alt="${recipe.strMeal}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/E2E8F0/AAAAAA?text=No+Image';" class="w-full h-48 object-cover rounded-md">
                         <div class="py-3">
                             <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate" title="${recipe.strMeal}">${recipe.strMeal}</h3>
                             <p class="text-sm text-gray-600">${recipe.strArea ? recipe.strArea : 'Various'} | ${recipe.strCategory ? recipe.strCategory : 'General'}</p>
@@ -282,16 +291,15 @@
 
             // Add event listeners to new cards
             document.querySelectorAll('.recipe-card').forEach(card => {
-                 // Click on card (excluding button) to show details
                 card.addEventListener('click', (e) => {
-                    if (!e.target.closest('.add-to-favorites')) { // Don't trigger if favorite button is clicked
+                    if (!e.target.closest('.add-to-favorites')) { 
                         fetchRecipeDetails(card.dataset.id);
                     }
                 });
             });
             document.querySelectorAll('.add-to-favorites').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent card click event
+                    e.stopPropagation(); 
                     toggleFavorite(button.dataset.id, button.dataset.name, button.dataset.thumb, button.dataset.area, button.dataset.category, button);
                 });
             });
@@ -318,7 +326,7 @@
 
             modalBody.innerHTML = `
                 <h2 class="text-3xl font-bold mb-4 text-gray-800">${recipe.strMeal}</h2>
-                <img src="${recipe.strMealThumb}" alt="${recipe.strMeal}" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
+                <img src="${recipe.strMealThumb}" alt="${recipe.strMeal}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/E2E8F0/AAAAAA?text=No+Image';" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <h3 class="text-xl font-semibold mb-2 text-indigo-600">Ingredients:</h3>
@@ -342,11 +350,9 @@
 
             `;
             recipeModal.style.display = 'block';
-            // Add event listener to favorite button inside modal
             modalBody.querySelector('.favorite-btn').addEventListener('click', (e) => {
                 const btn = e.currentTarget;
                 toggleFavorite(btn.dataset.id, btn.dataset.name, btn.dataset.thumb, btn.dataset.area, btn.dataset.category, btn);
-                // Also update the corresponding button on the main page if it exists
                 const mainPageButton = recipeResultsContainer.querySelector(`.add-to-favorites[data-id="${btn.dataset.id}"]`);
                 if (mainPageButton) {
                      updateFavoriteButtonUI(mainPageButton, favorites.some(fav => fav.idMeal === btn.dataset.id));
@@ -354,19 +360,17 @@
             });
         }
         
-        // --- Favorite Functions ---
         function toggleFavorite(id, name, thumb, area, category, buttonElement) {
             const recipeIndex = favorites.findIndex(fav => fav.idMeal === id);
             if (recipeIndex > -1) {
-                favorites.splice(recipeIndex, 1); // Remove from favorites
+                favorites.splice(recipeIndex, 1); 
             } else {
-                favorites.push({ idMeal: id, strMeal: name, strMealThumb: thumb, strArea: area, strCategory: category }); // Add to favorites
+                favorites.push({ idMeal: id, strMeal: name, strMealThumb: thumb, strArea: area, strCategory: category }); 
             }
             localStorage.setItem('recipeFavorites', JSON.stringify(favorites));
-            updateFavoriteButtonUI(buttonElement, recipeIndex === -1); // Update button text/style
+            updateFavoriteButtonUI(buttonElement, recipeIndex === -1); 
 
-            // If the modal's favorite button was clicked, also update its text
-            if (buttonElement.classList.contains('favorite-btn')) { // This is the modal button
+            if (buttonElement.classList.contains('favorite-btn')) { 
                  buttonElement.innerHTML = recipeIndex === -1 ? 
                     '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>Remove Favorite' : 
                     '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>Add to Favorites';
@@ -388,18 +392,15 @@
         }
 
         function displayFavoriteRecipes() {
-            document.getElementById('filters').scrollIntoView({ behavior: 'smooth' }); // Scroll to top of filters
-            recipeResultsContainer.innerHTML = ''; // Clear current results
+            document.getElementById('filters').scrollIntoView({ behavior: 'smooth' }); 
+            recipeResultsContainer.innerHTML = ''; 
             if (favorites.length === 0) {
                 noResultsMsg.textContent = "You haven't saved any favorite recipes yet!";
                 noResultsMsg.style.display = 'block';
                 return;
             }
             noResultsMsg.style.display = 'none';
-            // TheMealDB API doesn't allow fetching multiple specific IDs at once easily.
-            // So, we display the stored favorite data directly.
-            // For full details, user would click, and we'd fetch by ID.
-            displayRecipes(favorites.map(fav => ({ // Map to structure displayRecipes expects
+            displayRecipes(favorites.map(fav => ({ 
                 idMeal: fav.idMeal,
                 strMeal: fav.strMeal,
                 strMealThumb: fav.strMealThumb,
@@ -408,94 +409,79 @@
             })));
         }
 
-        // --- Dietary Filter Functions ---
         function checkDietaryMatch(recipe, diet) {
-            // This is a simplified check. For true accuracy, a more comprehensive ingredient database is needed.
-            // Or an API that provides explicit dietary tags (like Spoonacular).
-            
-            // Fetch full recipe details to check ingredients if not already present
-            // For performance, this should ideally be done once per recipe if details are not in summary
-            // However, TheMealDB search results don't include full ingredient lists.
-            // This means we'd need to make an additional API call per recipe for filtering, which can be slow.
-            // For this demo, we'll assume the basic info (name, category) might give clues,
-            // or we'd need to fetch details on demand.
-            // A more robust solution would be to fetch details for all results, then filter.
-
-            // For this example, we'll make it a placeholder.
-            // To implement properly: fetch full recipe details (lookup.php?i=MEAL_ID), then analyze ingredients.
+            // Placeholder: This function needs more robust logic for accurate dietary filtering.
+            // For now, it's a very basic check.
             const name = recipe.strMeal.toLowerCase();
             const category = recipe.strCategory ? recipe.strCategory.toLowerCase() : "";
-            // const tags = recipe.strTags ? recipe.strTags.toLowerCase() : ""; // Not always reliable
 
             if (diet === 'vegan') {
-                // Simple check based on name/category - very approximate
                 if (name.includes('vegan') || category.includes('vegan')) return true;
-                if (category.includes('vegetarian') && !name.includes('egg') && !name.includes('cheese') && !name.includes('milk') && !name.includes('honey')) return true; // Approximation
-                // A real check would iterate through strIngredient1...strIngredient20
-                // and check against a list of non-vegan items (meat, dairy, eggs, honey, etc.)
-                return false; // Default to false if not obviously vegan by name/category
+                // A more robust check would involve fetching full ingredients and checking against a list of non-vegan items.
+                if (category.includes('vegetarian') && !name.includes('egg') && !name.includes('cheese') && !name.includes('milk') && !name.includes('honey')) return true;
+                return false; 
             }
             if (diet === 'gluten-free') {
                 if (name.includes('gluten-free') || name.includes('gluten free')) return true;
-                // A real check would iterate through ingredients for wheat, barley, rye, oats (unless certified GF), soy sauce (unless tamari), etc.
-                return false; // Default to false
+                 // A more robust check would involve fetching full ingredients and checking against gluten-containing grains.
+                return false; 
             }
-            return true; // No diet filter or unknown diet
+            return true; 
         }
 
         function setActiveDietButton(diet) {
-            veganFilterBtn.classList.remove('bg-green-400', 'text-white');
-            glutenFreeFilterBtn.classList.remove('bg-yellow-400', 'text-white');
+            veganFilterBtn.classList.remove('bg-green-400', 'text-white', 'ring-2', 'ring-green-500');
+            glutenFreeFilterBtn.classList.remove('bg-yellow-400', 'text-white', 'ring-2', 'ring-yellow-500');
             currentDietFilter = diet;
             if (diet === 'vegan') {
-                veganFilterBtn.classList.add('bg-green-400', 'text-white');
+                veganFilterBtn.classList.add('bg-green-400', 'text-white', 'ring-2', 'ring-green-500');
             } else if (diet === 'gluten-free') {
-                glutenFreeFilterBtn.classList.add('bg-yellow-400', 'text-white');
+                glutenFreeFilterBtn.classList.add('bg-yellow-400', 'text-white', 'ring-2', 'ring-yellow-500');
             }
         }
 
-        // --- Utility Functions ---
         function showLoader(show) {
             loader.style.display = show ? 'block' : 'none';
         }
 
-        // --- Event Listeners ---
         searchButton.addEventListener('click', async () => {
             const searchTerm = searchNameInput.value.trim();
-            const selectedCuisine = cuisineFilter.value;
+            const selectedCategoryCuisine = categoryCuisineFilter.value;
+            const selectedOption = categoryCuisineFilter.options[categoryCuisineFilter.selectedIndex];
+            const filterType = selectedOption ? selectedOption.dataset.type : null; // 'category' or 'cuisine'
             const selectedIngredient = ingredientFilter.value;
             
             let endpoint = '';
 
             if (searchTerm) {
-                endpoint = `search.php?s=${searchTerm}`;
-            } else if (selectedCuisine) {
-                endpoint = `filter.php?a=${selectedCuisine}`;
+                endpoint = `search.php?s=${encodeURIComponent(searchTerm)}`;
+            } else if (selectedCategoryCuisine && filterType === 'category') { // Check if it's a category like Breakfast
+                endpoint = `filter.php?c=${encodeURIComponent(selectedCategoryCuisine)}`;
+            } else if (selectedCategoryCuisine && filterType === 'cuisine') { // Check if it's a cuisine
+                endpoint = `filter.php?a=${encodeURIComponent(selectedCategoryCuisine)}`;
             } else if (selectedIngredient) {
-                endpoint = `filter.php?i=${selectedIngredient}`;
+                endpoint = `filter.php?i=${encodeURIComponent(selectedIngredient)}`;
             } else {
-                // Default: fetch some random recipes or a popular category if no filter
-                endpoint = 'search.php?s='; // Fetches a variety
-                // Or, you could fetch by a default category: `filter.php?c=Seafood`
+                endpoint = 'search.php?s='; // Default: fetches a variety, or you can set a specific default like 'Arrabiata'
             }
             
             const recipes = await fetchAPI(endpoint);
-            displayRecipes(recipes);
+            displayRecipes(recipes); // Dietary filter will be applied client-side in displayRecipes
         });
 
         veganFilterBtn.addEventListener('click', () => {
-            setActiveDietButton('vegan');
-            searchButton.click(); // Re-run search with new diet filter
+            setActiveDietButton(currentDietFilter === 'vegan' ? null : 'vegan'); // Toggle on/off
+            searchButton.click(); 
         });
 
         glutenFreeFilterBtn.addEventListener('click', () => {
-            setActiveDietButton('gluten-free');
-            searchButton.click(); // Re-run search with new diet filter
+            setActiveDietButton(currentDietFilter === 'gluten-free' ? null : 'gluten-free'); // Toggle on/off
+            searchButton.click(); 
         });
         
         clearDietFilterBtn.addEventListener('click', () => {
             setActiveDietButton(null);
-            searchButton.click(); // Re-run search
+            searchButton.click(); 
         });
 
         showFavoritesButton.addEventListener('click', displayFavoriteRecipes);
@@ -510,9 +496,7 @@
             }
         });
 
-        // --- Initialization ---
         function initializeRawFoods() {
-            // Populate ingredient filter dropdown
             commonIngredients.forEach(ing => {
                 const option = document.createElement('option');
                 option.value = ing;
@@ -520,29 +504,30 @@
                 ingredientFilter.appendChild(option);
             });
 
-            // Populate raw foods list for clickable selection
-            rawFoodsListContainer.innerHTML = ''; // Clear existing
+            rawFoodsListContainer.innerHTML = ''; 
             commonIngredients.forEach(ing => {
                 const button = document.createElement('button');
                 button.classList.add('px-3', 'py-1', 'text-sm', 'border', 'border-gray-300', 'rounded-full', 'hover:bg-indigo-100', 'hover:border-indigo-300', 'transition-colors');
                 button.textContent = ing;
                 button.dataset.ingredient = ing;
                 button.addEventListener('click', () => {
-                    ingredientFilter.value = ing; // Set the main ingredient filter
-                    // Optionally, trigger search immediately or let user click search button
+                    ingredientFilter.value = ing; 
+                    // Clear other primary filters when a raw food is clicked for simplicity
+                    searchNameInput.value = '';
+                    categoryCuisineFilter.value = '';
+                    setActiveDietButton(null);
+
                     searchButton.click();
-                    // Scroll to filters to show selection
                     document.getElementById('filters').scrollIntoView({ behavior: 'smooth' });
                 });
                 rawFoodsListContainer.appendChild(button);
             });
         }
         
-        // Initial load - perhaps fetch some popular recipes or let user search
         async function initialLoad() {
             initializeRawFoods();
-            // Example: Load some chicken recipes by default or leave blank until search
-            const initialRecipes = await fetchAPI('search.php?s=Arrabiata'); // Fetch some initial recipes
+            // Fetch some "Breakfast" recipes on initial load as an example
+            const initialRecipes = await fetchAPI('filter.php?c=Breakfast'); 
             displayRecipes(initialRecipes);
         }
 
